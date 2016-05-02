@@ -9,8 +9,9 @@
   "author": "Gerardino",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.3.5",
     "cheerio": "^0.20.0",
     "jquery": "^2.1.4",
-    "request": "^2.55.0"
+    "restling": "^0.9.1"
   }
 }

@@ -5,12 +5,32 @@ if (process.argv.length > 2) {
     console.log("Specified: ", specificModel);
 }
 
-var cheerio = require('cheerio'),
-    request = require('request'),
+var request = require('request'),
+    cheerio = require('cheerio'),
+    bluebird = require('bluebird'),
+
+    gpa = require('./lib/gpAutos'),
 
     summaryFilter = ["Marca:", "Modelo:", "Linea:", "Motor:", "Kilometraje:", "Origen:", "Transmision:"],
 
-    Input = function() {
+    baseUrl = 'http://gpautos.net',
+    filter = '/GP/carros/filtro',
+    specificModelUrl = '/GP/carros/ver/',
+
+    doRequest = function (url, input, callback) {
+        request.post(url, {
+            form: input
+        },
+            function (err, res, body) {
+                if (!err && res.statusCode === 200) {
+                    callback(body);
+                } else if (err) {
+                    console.log("Error!", err);
+                }
+            });
+    },
+
+    Input = function () {
         return {
             'AnioMinimo': '2005',
             'AnioMaximo': '2015',
@@ -25,57 +45,13 @@ var cheerio = require('cheerio'),
             'Departamento': 'todos',
             'Tipo': 'usado',
             'TipoVehiculo': 'automovil'
-                // 'TipoVehiculo': 'camionetilla'
+            // 'TipoVehiculo': 'camionetilla'
         };
     },
 
-    baseUrl = 'http://gpautos.net',
-    filter = '/GP/carros/filtro',
-    specificModelUrl = '/GP/carros/ver/',
-
-    doRequest = function(url, input, callback) {
-        request.post(url, {
-                form: input
-            },
-            function(err, res, body) {
-                if (!err && res.statusCode === 200) {
-                    callback(body);
-                } else if (err) {
-                    console.log("Error!", err);
-                }
-            });
-    },
-
-    carUrlRegex = /\/GP\/carros\/ver\/[0-9]{5}/gi,
-    requestCars = function(input) {
-
-        if (input === undefined) {
-            input = new Input();
-        }
-
-        var url = baseUrl + filter;
-
-        doRequest(url, input, function(body) {
-            var matches = body.match(carUrlRegex);
-
-            if (matches.length === 0) {
-                console.log("No results");
-            } else {
-                matches.forEach(function(carUrl) {
-                    doRequest(baseUrl + carUrl, {}, function(body) {
-                        processCarPage(carUrl.substring(carUrl.lastIndexOf('/') + 1), body)
-                    });
-
-                });
-
-                // var carUrl = matches[0];
 
 
-            }
-        });
-    },
-
-    processCarPage = function(carId, body) {
+    processCarPage = function (carId, body) {
         var vehicles = [];
 
         $ = cheerio.load(body);
@@ -93,7 +69,7 @@ var cheerio = require('cheerio'),
 
 
 
-        $('.cdata').each(function() {
+        $('.cdata').each(function () {
             var attr = $(this).find('label').html();
             var value = $(this).find('span').html();
 
@@ -103,7 +79,7 @@ var cheerio = require('cheerio'),
             }
         });
 
-        $('.infoPrecio h1').each(function() {
+        $('.infoPrecio h1').each(function () {
             // console.log($(this).html());
             var precioLbl = $(this).html().split(':');
             vehicle[precioLbl[0]] = precioLbl[1];
@@ -116,20 +92,22 @@ var cheerio = require('cheerio'),
         // });
     };
 
-module.exports = {
-    Input: Input,
-    doRequest: doRequest,
-    // request: request,
-    requestCars: requestCars
-}
 
 
 if (specificModel) {
-    doRequest(baseUrl + specificModelUrl + specificModel, {}, function(body) {
+    doRequest(baseUrl + specificModelUrl + specificModel, {}, function (body) {
         processCarPage(specificModel, body);
     });
 } else {
-    requestCars();
+    gpa.requestCars().then(function (cars) {
+        if (cars.length === undefined) {
+            console.log("Something has gone terribly wrong");
+        } else if (cars.length === 0) {
+            console.log("No vehicles found!");
+        } else {
+            console.log("Found ", cars.length, " items. Displaying first:\n%j", cars[0]);
+        }
+    });
 }
 
 
