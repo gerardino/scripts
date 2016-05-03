@@ -5,6 +5,7 @@ var //request = require('request'),
 
     f = require('./functions'),
     Filters = require('./filters'),
+    Auto = require('./auto'),
 
     baseUrl = 'http://gpautos.net',
     filter = '/GP/carros/filtro',
@@ -58,7 +59,9 @@ var //request = require('request'),
 
     processCarPage = function processCarPage(carId, body) {
         var $ = cheerio.load(body.data),
-            vehicle = { "Id": carId };
+            // vehicle = { "Id": carId }
+            vehicle = new Auto(carId)
+            ;
 
         $('.cdata').each(function () {
             var attr = normalizeAttr($(this).find('label').html());
@@ -79,8 +82,19 @@ var //request = require('request'),
         });
 
         return vehicle;
+    },
+    
+    requestCar = function requestCar(id){
+        if (id){
+            return restling.post(baseUrl + specificModelUrl + id).then(function(body){
+                return processCarPage(id, body);
+            });
+        } else {
+            return new error("Invalid id");
+        }
     };
 
 module.exports = {
-    requestCars: requestCars
+    requestCars: requestCars,
+    requestCar : requestCar
 }

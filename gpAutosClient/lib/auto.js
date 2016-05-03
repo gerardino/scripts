@@ -1,5 +1,16 @@
-var Auto = function Auto(){
-    
+var Auto = function Auto(id) {
+    var dossierFilters = ["id", "marca", "modelo", "linea", "motor", "kilometraje", "origen", "transmision"];
+
+    this.id = id;
+    var source = this;
+
+    this.getSummary = function getSummary() {
+        var result = {}
+        dossierFilters.forEach(function (k) {
+            result[k] = source[k];
+        });
+        return result;
+    }
 };
 
 
