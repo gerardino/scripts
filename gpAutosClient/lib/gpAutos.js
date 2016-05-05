@@ -39,12 +39,9 @@ var //request = require('request'),
                 var limit = 1;
                 matches.forEach(function (carUrl) {
                     if (counter < limit) {
-                        promises.push(restling.post(baseUrl + carUrl).then(function (body) {
-                            return processCarPage(carUrl.substring(carUrl.lastIndexOf('/') + 1), body);
-                        }));
+                        promises.push(requestCar(carUrl.substring(carUrl.lastIndexOf('/') + 1)));
                         counter++;
                     }
-
                 });
 
                 return bluebird.all(promises);
@@ -83,7 +80,7 @@ var //request = require('request'),
 
         return vehicle;
     },
-    
+
     requestCar = function requestCar(id){
         if (id){
             return restling.post(baseUrl + specificModelUrl + id).then(function(body){

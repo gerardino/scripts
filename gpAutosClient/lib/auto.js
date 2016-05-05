@@ -7,7 +7,7 @@ var Auto = function Auto(id) {
     this.getSummary = function getSummary() {
         var result = {}
         dossierFilters.forEach(function (k) {
-            result[k] = source[k];
+            result[k] = source[k] || this[k];
         });
         return result;
     }
