@@ -1,0 +1,11 @@
+{
+  "name": "transformpasswords",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Oops no tests!\" && exit 1"
+  },
+  "author": "gerardo586x@gmail.com",
+  "license": "ISC"
+}
